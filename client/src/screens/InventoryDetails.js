@@ -114,6 +114,13 @@ const InventoryDetails = () => {
                       date: item.archivedAt,
                     }]
                   : []),
+                ...(item.restoredAt
+                  ? [{
+                      label: "Restored",
+                      value: item.restoredBy?.name || "Not recorded",
+                      date: item.restoredAt,
+                    }]
+                  : []),
               ].map((entry) => (
                 <article key={entry.label} className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
                   <p className="text-xs font-medium uppercase tracking-wide text-slate-500">{entry.label}</p>
@@ -161,7 +168,7 @@ const InventoryDetails = () => {
                         <tr>
                           <th className="pb-3 font-medium">Activity</th>
                           <th className="pb-3 text-right font-medium">Units added</th>
-                          <th className="pb-3 font-medium">Recorded by</th>
+                          <th className="pb-3 text-right font-medium">Recorded by</th>
                           <th className="pb-3 text-right font-medium">Date and time</th>
                         </tr>
                       </thead>
@@ -175,7 +182,7 @@ const InventoryDetails = () => {
                               </span>
                             </td>
                             <td className="py-4 text-right font-semibold text-emerald-800">+{movement.quantity}</td>
-                            <td className="py-4 text-slate-600">{movement.performedBy?.name || "Not recorded"}</td>
+                            <td className="py-4 text-right text-slate-600">{movement.performedBy?.name || "Not recorded"}</td>
                             <td className="py-4 text-right text-slate-500">
                               {new Date(movement.createdAt).toLocaleString("en-IN", {
                                 dateStyle: "medium",

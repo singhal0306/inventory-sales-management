@@ -260,6 +260,7 @@ const SalesDetails = () => {
                   <tr>
                     <th className="px-5 py-3 font-medium">Bill</th>
                     <th className="px-5 py-3 font-medium">Customer</th>
+                    <th className="px-5 py-3 font-medium">Created by</th>
                     <th className="px-5 py-3 font-medium">Date</th>
                     <th className="px-5 py-3 text-right font-medium">Amount</th>
                     <th className="px-5 py-3 text-right font-medium">&nbsp;</th>
@@ -274,6 +275,7 @@ const SalesDetails = () => {
                       <td className="px-5 py-4 text-slate-700">
                         {bill.customer?.customerName || bill.customerName || "Customer unavailable"}
                       </td>
+                      <td className="px-5 py-4 text-slate-700">{bill.createdBy?.name || "Not recorded"}</td>
                       <td className="px-5 py-4 text-slate-500">{formatDate(bill.createdAt)}</td>
                       <td className="px-5 py-4 text-right font-semibold text-slate-900">
                         {formatCurrency(bill.subTotal)}

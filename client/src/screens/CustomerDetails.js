@@ -89,7 +89,7 @@ const CustomerDetails = () => {
           Back to customers
         </Link>
 
-        {customerLoading ? (
+        {customerLoading || (!customersLoaded && !customerLoadError) ? (
           <p className="rounded-lg border border-slate-200 bg-white p-8 text-center text-sm text-slate-500">
             Loading customer...
           </p>
@@ -133,6 +133,13 @@ const CustomerDetails = () => {
                       label: "Customer archived",
                       actor: customer.archivedBy?.name,
                       date: customer.archivedAt,
+                    }]
+                  : []),
+                ...(customer.restoredAt
+                  ? [{
+                      label: "Customer restored",
+                      actor: customer.restoredBy?.name,
+                      date: customer.restoredAt,
                     }]
                   : []),
               ].map((entry) => (
