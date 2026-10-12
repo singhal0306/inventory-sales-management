@@ -12,6 +12,8 @@ const registerSlice = createSlice({
   reducers: {
     userRegisterRequest(state) {
       state.loading = true;
+      state.registerFails = false;
+      state.error = null;
     },
     userRegisterSuccess(state, action) {
       state.loading = false;

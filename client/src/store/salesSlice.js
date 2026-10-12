@@ -31,6 +31,21 @@ const salesSlice = createSlice({
       const existingItem = state.salesItems.find(
         (item) => item._id === newItem._id
       );
+      const currentQuantity = existingItem ? Number(existingItem.quantity) : 0;
+      const requestedQuantity = Number(quantity);
+      const availableQuantity = Number(newItem.quantity);
+
+      if (
+        !Number.isFinite(requestedQuantity) ||
+        requestedQuantity === 0 ||
+        (!existingItem && requestedQuantity < 0) ||
+        (requestedQuantity > 0 &&
+          (!Number.isFinite(availableQuantity) ||
+            currentQuantity + requestedQuantity > availableQuantity))
+      ) {
+        return;
+      }
+
       if (!existingItem) {
         const item = {
           _id: newItem._id,

@@ -1,9 +1,9 @@
 const express = require("express");
-const { protect } = require("../controllers/authMiddleware");
-const {addNewBill, sendBillData} = require("../controllers/billController")
+const { protect } = require("../middleware/authMiddleware");
+const { addNewBill, sendBillData } = require("../controllers/billController");
 const router = express.Router();
 
-// /api/bill/newbill
+router.use(protect);
 router.post("/newbill", addNewBill);
-router.get("/allbills", sendBillData)
+router.get("/allbills", sendBillData);
 module.exports = router;

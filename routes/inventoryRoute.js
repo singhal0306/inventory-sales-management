@@ -2,12 +2,17 @@ const express = require("express");
 const {
   inventory,
   addtoinventory,
-  deleteFromInventory,
+  addStock,
+  archiveFromInventory,
+  restoreToInventory,
 } = require("../controllers/inventryController");
-const { protect } = require("../controllers/authMiddleware");
+const { protect } = require("../middleware/authMiddleware");
 const router = express.Router();
 
-router.get("/getitems", protect, inventory);
-router.post("/addtoinventory", protect, addtoinventory);
-router.get("/delete/:id", protect, deleteFromInventory)
+router.use(protect);
+router.get("/getitems", inventory);
+router.post("/addtoinventory", addtoinventory);
+router.post("/addstock/:id", addStock);
+router.patch("/archive/:id", archiveFromInventory);
+router.patch("/restore/:id", restoreToInventory);
 module.exports = router;

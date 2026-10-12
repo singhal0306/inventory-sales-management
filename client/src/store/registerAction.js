@@ -8,8 +8,7 @@ export const userRegistration = (user) => {
       const response = await axios.post("/api/user/register", user);
       dispatch(registerAction.userRegisterSuccess(response.data.message));
     } catch (error) {
-      // console.log(error.response.data.message);
-      dispatch(registerAction.userRegisterFails(error.response.data.message));
+      dispatch(registerAction.userRegisterFails(error.response?.data?.message || "Unable to create account. Please try again."));
     }
   };
 };

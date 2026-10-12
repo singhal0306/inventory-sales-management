@@ -1,5 +1,5 @@
-import React, { useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import React from "react";
+import { useDispatch } from "react-redux";
 import { salesActions } from "../store/salesSlice";
 
 const Bill = ({ item, quantity }) => {
@@ -15,15 +15,16 @@ const Bill = ({ item, quantity }) => {
 
   return (
     <button
-      key={item._id}
-      className="flex flex-col bg-slate-400 rounded-lg p-2 justify-start mb-3 border-b-4 hover:border-spacing-1 hover:border-b-4 hover:border-gray-500 w-36"
+      type="button"
+      className="group flex min-h-28 w-full flex-col justify-between rounded-md border border-slate-200 bg-white p-3 text-left transition hover:border-emerald-500 hover:bg-emerald-50/40 hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-1"
       onClick={addToBill}
     >
-      <p>
-        <b>{item.itemName}</b>&nbsp;({item.quantity}) 
-      </p>
-      <p className="text-sm">Price: {item.ppp}</p>
-      <p className="text-xs">{item.manufacturer}</p>
+      <span className="line-clamp-2 font-medium text-slate-900">{item.itemName}</span>
+      <span className="mt-1 text-xs text-slate-500">{item.manufacturer}</span>
+      <span className="mt-3 flex items-center justify-between gap-2">
+        <span className="text-sm font-semibold text-slate-900">₹{item.ppp}</span>
+        <span className="text-xs text-emerald-800">{item.quantity} available</span>
+      </span>
     </button>
   );
 };
