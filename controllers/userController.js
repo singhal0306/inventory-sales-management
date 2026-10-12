@@ -41,6 +41,7 @@ const registerUser = async (req, res, next) => {
       name,
       email,
       password,
+      role: "user",
     });
 
     if (user) {
@@ -77,6 +78,10 @@ const loginUser = async (req, res, next) => {
       throw new Error("Invalid Credentials");
     }
     const matchPassword = await bcrypt.compare(password, user.password);
+    if (user.isActive === false) {
+      res.status(403);
+      throw new Error("Your account is disabled. Contact an administrator.");
+    }
     if (user && matchPassword) {
       const token = genToken(user._id);
       res.cookie("jwt", token, jwtCookieOptions());
@@ -90,6 +95,7 @@ const loginUser = async (req, res, next) => {
           _id: user._id,
           name: user.name,
           email: user.email,
+          role: user.role || "user",
           hasProfilePhoto: Boolean(user.profilePhoto?.contentType),
         },
       });

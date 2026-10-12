@@ -26,5 +26,7 @@ const billSchema = new mongoose.Schema(
   }
 );
 
+billSchema.index({ createdAt: 1 });
+
 const billModal = mongoose.model('bill', billSchema);
 module.exports = billModal;

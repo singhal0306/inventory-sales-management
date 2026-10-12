@@ -1,5 +1,6 @@
 const express = require("express");
-const { protect } = require("../middleware/authMiddleware");
+const { protect, requireAdmin } = require("../middleware/authMiddleware");
+const { getUsers, updateUser } = require("../controllers/adminController");
 const {
   registerUser,
   loginUser,
@@ -14,6 +15,8 @@ const parseProfilePhoto = require("../middleware/profilePhotoUpload");
 const router = express.Router();
 
 router.post("/register", registerUser);
+router.get("/admin/users", protect, requireAdmin, getUsers);
+router.patch("/admin/users/:id", protect, requireAdmin, updateUser);
 router.post("/login", loginUser);
 router.post("/logout", protect, logoutUser);
 router.get("/getuser", protect, getUser);

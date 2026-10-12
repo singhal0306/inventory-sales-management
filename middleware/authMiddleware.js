@@ -14,10 +14,15 @@ const protect = async (req, res, next) => {
       res.status(401);
       throw new Error("User not found");
     }
+    if (user.isActive === false) {
+      res.status(403);
+      throw new Error("Your account is disabled. Contact an administrator.");
+    }
     req.user = {
       _id: user._id,
       name: user.name,
       email: user.email,
+      role: user.role || "user",
       hasProfilePhoto: Boolean(user.profilePhoto?.contentType),
     };
     next();
@@ -26,4 +31,13 @@ const protect = async (req, res, next) => {
   }
 };
 
-module.exports = { protect };
+const requireAdmin = (req, res, next) => {
+  if (req.user?.role !== "admin") {
+    const error = new Error("Administrator access is required.");
+    error.statusCode = 403;
+    return next(error);
+  }
+  next();
+};
+
+module.exports = { protect, requireAdmin };

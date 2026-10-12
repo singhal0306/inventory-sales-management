@@ -31,6 +31,9 @@ function SideMenu() {
   const { pathname } = useLocation();
   const [loggingOut, setLoggingOut] = useState(false);
   const [logoutError, setLogoutError] = useState("");
+  const visibleNavigation = user.role === "admin"
+    ? [...navigationItems, { to: "/admin/users", label: "Admin panel", icon: UserGroupIcon }]
+    : navigationItems;
 
   const userInitials = String(user.name || "U")
     .split(/\s+/)
@@ -88,7 +91,7 @@ function SideMenu() {
           </Link>
         </div>
         <nav aria-label="Main navigation" className="flex gap-1 overflow-x-auto px-3 pb-2 pt-1">
-          {navigationItems.map(({ to, label, icon: Icon }) => {
+          {visibleNavigation.map(({ to, label, icon: Icon }) => {
             const active = isActive(to);
             return (
               <Link
@@ -142,7 +145,7 @@ function SideMenu() {
 
         <nav aria-label="Main navigation" className="flex-1 space-y-1 px-3 py-5">
           <p className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-400">Workspace</p>
-          {navigationItems.map(({ to, label, icon: Icon }) => {
+          {visibleNavigation.map(({ to, label, icon: Icon }) => {
             const active = isActive(to);
             return (
               <Link

@@ -13,6 +13,7 @@ const userRoute = require("./routes/userRoute");
 const inventoryRoute = require("./routes/inventoryRoute")
 const billingRoute = require("./routes/billingRoute")
 const customerRoute = require("./routes/customerRoute");
+const analyticsRoute = require("./routes/analyticsRoute");
 const errorHandler = require("./middleware/errorMiddleware");
 
 const app = express();
@@ -81,6 +82,7 @@ app.use("/api/user", userRoute);
 app.use("/api/inventory", inventoryRoute)
 app.use("/api/bill", billingRoute);
 app.use("/api/customer", customerRoute);
+app.use("/api/analytics", analyticsRoute);
 
 app.get("/", (req, res) => {
   res.send("Hello from the server!");

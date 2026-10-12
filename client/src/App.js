@@ -15,6 +15,7 @@ import InventoryDetails from "./screens/InventoryDetails";
 import Customers from "./screens/Customers";
 import CustomerDetails from "./screens/CustomerDetails";
 import Profile from "./screens/Profile";
+import AdminUsers from "./screens/AdminUsers";
 import { getUser } from "./store/userAction";
 import { useDispatch } from "react-redux";
 
@@ -45,6 +46,7 @@ function App() {
           <Route path="/customers" element={<Customers />} />
           <Route path="/customers/:customerId" element={<CustomerDetails />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/admin/users" element={<AdminUsers />} />
           <Route path="/sales" element={<Sales />} />
         </Route>
         <Route path="*" element={<NoPageFound />} />
