@@ -103,6 +103,44 @@ const loginUser = async (req, res, next) => {
   }
 };
 
+const changePassword = async (req, res, next) => {
+  try {
+    const { currentPassword, newPassword, confirmPassword } = req.body;
+    if (typeof currentPassword !== "string" || typeof newPassword !== "string" || typeof confirmPassword !== "string") {
+      res.status(400);
+      throw new Error("Provide your current password, new password, and confirmation.");
+    }
+    if (newPassword.trim().length < 6 || newPassword.length > 23) {
+      res.status(400);
+      throw new Error("New password must contain 6 to 23 characters.");
+    }
+    if (newPassword !== confirmPassword) {
+      res.status(400);
+      throw new Error("New passwords do not match.");
+    }
+    const user = await User.findById(req.user._id).select("password");
+    if (!user) {
+      res.status(401);
+      throw new Error("User not found. Please sign in again.");
+    }
+    if (!(await bcrypt.compare(currentPassword, user.password))) {
+      res.status(400);
+      throw new Error("Current password is incorrect.");
+    }
+    if (await bcrypt.compare(newPassword, user.password)) {
+      res.status(400);
+      throw new Error("Choose a password different from your current password.");
+    }
+    user.password = newPassword;
+    // Validate the plaintext password and let the existing save hook hash it.
+    await user.save({ validateModifiedOnly: true });
+    req.log?.info({ event: "auth.password.changed", userId: String(user._id) }, "Password changed");
+    res.status(200).json({ message: "Password updated successfully." });
+  } catch (error) {
+    next(error);
+  }
+};
+
 const getUser = async (req, res, next) => {
   try {
     res.status(200).json(req.user);
@@ -202,6 +240,7 @@ const deleteProfilePhoto = async (req, res, next) => {
 };
 
 module.exports = {
+  changePassword,
   registerUser,
   loginUser,
   logoutUser,

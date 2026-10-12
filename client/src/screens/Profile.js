@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { Dialog } from "@headlessui/react";
 import { ArrowLeftIcon, CameraIcon, TrashIcon, UserCircleIcon, XMarkIcon } from "@heroicons/react/24/outline";
-import { fetchProfilePhoto, removeProfilePhoto, uploadProfilePhoto } from "../store/userAction";
+import { changePassword, fetchProfilePhoto, removeProfilePhoto, uploadProfilePhoto } from "../store/userAction";
 
 const Profile = () => {
   const dispatch = useDispatch();
@@ -15,6 +15,35 @@ const Profile = () => {
   const fileInputRef = useRef(null);
   const [validationError, setValidationError] = useState("");
   const [photoOptionsOpen, setPhotoOptionsOpen] = useState(false);
+  const [passwords, setPasswords] = useState({ currentPassword: "", newPassword: "", confirmPassword: "" });
+  const [passwordSaving, setPasswordSaving] = useState(false);
+  const [passwordError, setPasswordError] = useState("");
+  const [passwordMessage, setPasswordMessage] = useState("");
+
+  const handlePasswordChange = async (event) => {
+    event.preventDefault();
+    if (passwordSaving) return;
+    setPasswordError("");
+    setPasswordMessage("");
+    if (passwords.newPassword.trim().length < 6 || passwords.newPassword.length > 23) {
+      setPasswordError("New password must contain 6 to 23 characters.");
+      return;
+    }
+    if (passwords.newPassword !== passwords.confirmPassword) {
+      setPasswordError("New passwords do not match.");
+      return;
+    }
+    setPasswordSaving(true);
+    try {
+      const message = await dispatch(changePassword(passwords));
+      setPasswords({ currentPassword: "", newPassword: "", confirmPassword: "" });
+      setPasswordMessage(message);
+    } catch (error) {
+      setPasswordError(error.message);
+    } finally {
+      setPasswordSaving(false);
+    }
+  };
   const initials = String(user.name || "U")
     .split(/\s+/)
     .filter(Boolean)
@@ -114,6 +143,40 @@ const Profile = () => {
               <dd className="break-all font-mono text-xs text-slate-600">{user._id || "Not available"}</dd>
             </div>
           </dl>
+        </section>
+
+        <section aria-labelledby="password-heading" className="mt-5 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+          <div className="border-b border-slate-200 bg-slate-50 p-5 sm:px-7">
+            <h2 id="password-heading" className="font-semibold text-slate-900">Change password</h2>
+            <p id="password-help" className="mt-1 text-sm text-slate-500">Confirm your current password and choose a new one with 6 to 23 characters.</p>
+          </div>
+          <form onSubmit={handlePasswordChange} aria-busy={passwordSaving} className="space-y-4 p-5 sm:p-7">
+            <input type="text" name="username" autoComplete="username" value={user.email || ""} readOnly hidden />
+            {[
+              { name: "currentPassword", label: "Current password", autoComplete: "current-password" },
+              { name: "newPassword", label: "New password", autoComplete: "new-password" },
+              { name: "confirmPassword", label: "Confirm new password", autoComplete: "new-password" },
+            ].map((field) => (
+              <div key={field.name}>
+                <label htmlFor={field.name} className="mb-1.5 block text-sm font-medium text-slate-700">{field.label}</label>
+                <input id={field.name} name={field.name} type="password" autoComplete={field.autoComplete} required
+                  value={passwords[field.name]} readOnly={passwordSaving}
+                  aria-describedby={passwordError ? "password-help password-error" : "password-help"}
+                  onChange={(event) => {
+                    setPasswords({ ...passwords, [field.name]: event.target.value });
+                    setPasswordError("");
+                    setPasswordMessage("");
+                  }}
+                  className="w-full rounded-md border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-emerald-600 focus:bg-white focus:ring-2 focus:ring-emerald-100" />
+              </div>
+            ))}
+            {passwordError && <p id="password-error" role="alert" className="text-sm text-red-700">{passwordError}</p>}
+            {passwordMessage && <p role="status" className="text-sm text-emerald-700">{passwordMessage}</p>}
+            <button type="submit" disabled={passwordSaving}
+              className="rounded-md bg-emerald-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 disabled:cursor-wait disabled:opacity-60">
+              {passwordSaving ? "Updating password..." : "Update password"}
+            </button>
+          </form>
         </section>
 
         <input

@@ -17,6 +17,15 @@ const userSlice = createSlice({
     profilePhotoError: null,
   },
   reducers: {
+    sessionMissing(state) {
+      state.loading = false;
+      state.authChecked = true;
+      state.loginSuccess = false;
+      state.loginFails = false;
+      state.success = null;
+      state.error = null;
+      state.user = {};
+    },
     loginRequest(state) {
       state.loading = true;
       state.loginFails = false;

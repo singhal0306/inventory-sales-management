@@ -20,7 +20,11 @@ export const getUser = () => {
       const response = await axios.get("/api/user/getuser");
       dispatch(userAction.userInfo(response.data));
     } catch (error) {
-      dispatch(userAction.loginFails(error.response?.data?.message || "Session could not be verified"));
+      if (error.response?.status === 401) {
+        dispatch(userAction.sessionMissing());
+      } else {
+        dispatch(userAction.loginFails(error.response?.data?.message || "Session could not be verified"));
+      }
     }
   };
 };
@@ -36,6 +40,15 @@ export const userLogout = () => {
       throw new Error(error.response?.data?.message || "Could not log out. Please try again.");
     }
   };
+};
+
+export const changePassword = (passwords) => async () => {
+  try {
+    const response = await axios.patch("/api/user/password", passwords);
+    return response.data.message;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Password could not be updated. Please try again.");
+  }
 };
 
 const errorMessage = (error, fallback) =>
