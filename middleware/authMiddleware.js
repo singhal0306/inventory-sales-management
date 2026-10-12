@@ -9,7 +9,7 @@ const protect = async (req, res, next) => {
       throw new Error("Not Authorized please login first!");
     }
     const verified = jwt.verify(token, process.env.jwtSecret);
-    const user = await User.findById(verified.id).select("-password");
+    const user = await User.findById(verified.id).select("-password -profilePhoto.data");
     if (!user) {
       res.status(401);
       throw new Error("User not found");
@@ -18,6 +18,7 @@ const protect = async (req, res, next) => {
       _id: user._id,
       name: user.name,
       email: user.email,
+      hasProfilePhoto: Boolean(user.profilePhoto?.contentType),
     };
     next();
   } catch (error) {

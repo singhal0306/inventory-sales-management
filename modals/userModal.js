@@ -1,6 +1,18 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 
+const profilePhotoSchema = new mongoose.Schema(
+  {
+    data: { type: Buffer, required: true },
+    contentType: {
+      type: String,
+      enum: ["image/jpeg", "image/png", "image/webp"],
+      required: true,
+    },
+  },
+  { _id: false }
+);
+
 const userSchema = mongoose.Schema(
   {
     name: { type: String, required: [true, "Please add a Name"] },
@@ -20,6 +32,7 @@ const userSchema = mongoose.Schema(
       minLength: [6, "Password must be up to 6 charcters"],
       maxLength: [23, "Password is too Long"],
     },
+    profilePhoto: { type: profilePhotoSchema, default: undefined },
   },
   { timestamps: true }
 );

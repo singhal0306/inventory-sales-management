@@ -1,12 +1,22 @@
 import React from "react";
 import { useSelector } from "react-redux";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
+import Spineer from "./components/Spineer";
 
 const ProtectedWrapper = (props) => {
-  const auth = useSelector((state) => state.user.loginSuccess);
+  const { authChecked, loginSuccess } = useSelector((state) => state.user);
+  const location = useLocation();
 
-  if (!auth) {
-    return <Navigate to="/login" replace />;
+  if (!authChecked) {
+    return (
+      <div className="col-span-12 flex min-h-screen items-center justify-center bg-gray-100">
+        <Spineer />
+      </div>
+    );
+  }
+
+  if (!loginSuccess) {
+    return <Navigate to="/login" replace state={{ from: location }} />;
   }
   return props.children;
 };

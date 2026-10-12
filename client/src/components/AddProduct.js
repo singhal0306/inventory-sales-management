@@ -19,17 +19,22 @@ export default function AddProduct({ addProductModalSetting }) {
     e.preventDefault();
     if (name.trim().length > 0 && quantity > 0 && price > 0) {
       setError(false);
-      dispatch(
-        addItem({
-          itemName: name,
-          manufacturer: manufacturer,
-          quantity: quantity,
-          ppp: price,
-        })
-      );
-      setOpen(false);
+      try {
+        await dispatch(
+          addItem({
+            itemName: name,
+            manufacturer: manufacturer,
+            quantity: quantity,
+            ppp: price,
+          })
+        );
+        setOpen(false);
+        addProductModalSetting();
+      } catch (requestError) {
+        setError(requestError.message);
+      }
     } else {
-      setError(true);
+      setError("Enter a name, a positive quantity, and a positive price.");
     }
   };
 
@@ -67,9 +72,9 @@ export default function AddProduct({ addProductModalSetting }) {
               <Dialog.Panel className="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
                 <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                   <div className="sm:flex sm:items-start">
-                    <div className="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 sm:mx-0 sm:h-10 sm:w-10">
+                    <div className="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-emerald-50 sm:mx-0 sm:h-10 sm:w-10">
                       <PlusIcon
-                        className="h-6 w-6 text-blue-400"
+                        className="h-6 w-6 text-emerald-700"
                         aria-hidden="true"
                       />
                     </div>
@@ -95,7 +100,7 @@ export default function AddProduct({ addProductModalSetting }) {
                               id="name"
                               value={name}
                               onChange={(e) => setName(e.target.value)}
-                              className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                              className="block w-full rounded-md border border-slate-300 bg-slate-50 p-2.5 text-sm text-slate-900 outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
                               placeholder="Ex. Apple iMac 27&ldquo;"
                             />
                           </div>
@@ -112,7 +117,7 @@ export default function AddProduct({ addProductModalSetting }) {
                               id="manufacturer"
                               value={manufacturer}
                               onChange={(e) => setManufacturer(e.target.value)}
-                              className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                              className="block w-full rounded-md border border-slate-300 bg-slate-50 p-2.5 text-sm text-slate-900 outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
                               placeholder="Ex. Apple"
                             />
                           </div>
@@ -128,7 +133,7 @@ export default function AddProduct({ addProductModalSetting }) {
                               name="quantity"
                               id="quantity"
                               onChange={(e) => setQuantity(e.target.value)}
-                              className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                              className="block w-full rounded-md border border-slate-300 bg-slate-50 p-2.5 text-sm text-slate-900 outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
                               placeholder="0 - 999"
                             />
                           </div>
@@ -144,7 +149,7 @@ export default function AddProduct({ addProductModalSetting }) {
                               name="price"
                               id="price"
                               onChange={(e) => setPrice(e.target.value)}
-                              className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                              className="block w-full rounded-md border border-slate-300 bg-slate-50 p-2.5 text-sm text-slate-900 outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
                               placeholder="$299"
                             />
                           </div>
@@ -153,16 +158,14 @@ export default function AddProduct({ addProductModalSetting }) {
                     </div>
                   </div>
                   {error && (
-                    <p className="text-red-500 text-center">
-                      All fields are required to be fields
-                    </p>
+                    <p className="text-center text-sm text-red-700">{error}</p>
                   )}
                 </div>
 
                 <div className="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
                   <button
                     type="button"
-                    className="inline-flex w-full justify-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 sm:ml-3 sm:w-auto"
+                    className="inline-flex w-full justify-center rounded-md bg-emerald-700 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-emerald-800 sm:ml-3 sm:w-auto"
                     onClick={addProduct}
                   >
                     Add Product

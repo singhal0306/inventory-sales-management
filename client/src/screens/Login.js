@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import validator from "validator";
 import { useDispatch, useSelector } from "react-redux";
 import { userLogin } from "../store/userAction";
 import Spineer from "../components/Spineer";
 import SuccessAlert from "../components/SuccessAlert";
 import ErrorAlert from "../components/ErrorAlert";
-import { getItems } from "../store/inventoryAction";
-import { getBills } from "../store/billAction";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -30,13 +28,16 @@ const Login = () => {
     }
   };
   const navigate = useNavigate();
+  const location = useLocation();
   useEffect(() => {
     if (loginState.loginSuccess) {
-      dispatch(getItems())
-      dispatch(getBills())
-      setTimeout(() => navigate("/"), 2);
+      const from = location.state?.from;
+      const destination = from
+        ? `${from.pathname || "/"}${from.search || ""}${from.hash || ""}`
+        : "/";
+      navigate(destination, { replace: true });
     }
-  }, [loginState.loginSuccess, navigate, dispatch]);
+  }, [loginState.loginSuccess, location, navigate]);
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 h-screen  items-center place-items-center">
