@@ -58,7 +58,8 @@ Admin and analytics data are cleared on logout or loss of authentication. Analyt
 
 ### Backend
 
-- **`server.js`** connects MongoDB, configures parsers, cookies, CORS, tracing, routes, and error handling.
+- **`app.js`** creates Express with parsers, cookies, CORS, tracing, routes, and error handling. Importing it does not connect to MongoDB or open a port.
+- **`server.js`** loads environment configuration, connects to MongoDB before listening, and reports startup/connection errors.
 - **`routes/`** maps HTTP endpoints to middleware and controllers.
 - **`middleware/`** verifies authentication and admin roles, parses photo uploads, attaches request context, and handles errors.
 - **`controllers/`** validates requests, coordinates persistence, and returns responses.
@@ -70,12 +71,18 @@ Admin and analytics data are cleared on logout or loss of authentication. Analyt
 
 ```text
 inventory-sales-management/
+├── compose.yaml
+├── Dockerfile
+├── .dockerignore
+├── app.js
 ├── server.js
 ├── package.json
 ├── .env.sample
+├── .env.docker.sample
 ├── controllers/
 │   ├── userController.js
 │   ├── adminController.js
+│   ├── healthController.js
 │   ├── inventryController.js
 │   ├── customerController.js
 │   ├── billController.js
@@ -95,10 +102,18 @@ inventory-sales-management/
 │   ├── customerService.js
 │   └── analyticsService.js
 ├── utils/logger.js
+├── tests/
+│   ├── helpers.js
+│   ├── *.api.test.js
+│   └── *.test.js
 ├── scripts/
 │   ├── ADMIN_SETUP.md
-│   └── ANALYTICS.md
+│   ├── ANALYTICS.md
+│   └── DOCKER.md
 └── client/
+    ├── Dockerfile
+    ├── .dockerignore
+    ├── nginx/default.conf.template
     ├── package.json
     ├── tailwind.config.js
     ├── public/
@@ -159,6 +174,8 @@ All paths below are relative to the API server. Authentication is required unles
 
 | Method | Path | Purpose |
 | --- | --- | --- |
+| GET | `/api/health` | Readiness and MongoDB ping; public; 200 when ready, otherwise 503 |
+| GET | `/api/health/live` | HTTP process liveness; public; 200 independently of MongoDB |
 | POST | `/api/user/register` | Register an ordinary user; public |
 | POST | `/api/user/login` | Sign in; public |
 | POST | `/api/user/logout` | Clear the session cookie |
@@ -166,6 +183,7 @@ All paths below are relative to the API server. Authentication is required unles
 | PATCH | `/api/user/password` | Change password |
 | GET / POST / DELETE | `/api/user/profile-photo` | Read, upload, or remove a profile photo |
 | GET | `/api/user/admin/users` | List users; admin only |
+| GET | `/api/user/admin/users/:id/profile-photo` | Read a user's profile photo; admin only |
 | PATCH | `/api/user/admin/users/:id` | Update name/email/role/status; admin only |
 | GET | `/api/inventory/getitems` | List inventory; optional `includeArchived=true` |
 | POST | `/api/inventory/addtoinventory` | Create an item with opening stock |
@@ -272,6 +290,43 @@ The root `npm run server` script uses `nodemon`, which is not declared as a proj
 
 Production mode uses secure cookies. `cookieSameSite=none` also enables secure cookies. Configure HTTPS and allowed origins accordingly. The Express server currently serves the API; it does not serve the React build. Production frontend hosting must route browser paths back to its `index.html` and route `/api` requests to the backend, or provide an equivalent API URL configuration.
 
+## Docker
+
+The root `compose.yaml` builds and starts both applications on a shared network. It uses your existing MongoDB database and reads backend runtime configuration from the root `.env`. If you do not already have `.env`, create it from the Docker example:
+
+```sh
+cp .env.docker.sample .env
+```
+
+Set `mongoUrl` and `jwtSecret` in `.env`, then start the application:
+
+```sh
+docker compose up --build -d
+```
+
+Open `http://localhost:8080`. The frontend waits for the backend health check before starting, and only the frontend port is published. Use `docker compose logs -f` for logs and `docker compose down` to stop the applications.
+
+For another device on the same network, open `http://<server-LAN-IP>:8080` and include that exact origin in `.env`'s comma-separated `clientOrigin` value. Local HTTP uses development mode and `cookieSameSite=lax`; production mode requires HTTPS for session cookies. Frontend tracing supports HTTP LAN origins and does not prevent requests if browser crypto or session storage is unavailable. After changing frontend source, rebuild its image with `docker compose up -d --build frontend` and reload the browser.
+
+To build the images individually:
+
+```sh
+docker build -t stockroom-backend .
+docker build -t stockroom-frontend ./client
+```
+
+The backend image runs Node.js on port 5000. The frontend image serves the React build through Nginx on port 8080, supports React Router refreshes, and proxies `/api/` to `BACKEND_URL` (default `http://backend:5000`). Both runtime containers run as non-root users, and environment files are excluded from their images.
+
+See [`scripts/DOCKER.md`](scripts/DOCKER.md) for network setup, runtime environment variables, existing MongoDB connectivity, and HTTPS cookie configuration. Docker builds and container startup have not been verified in this session.
+
+## Health checks
+
+`GET /api/health` checks the existing MongoDB connection and issues a lightweight `ping`. It returns HTTP 200 when connected and responsive, or HTTP 503 when disconnected, connecting, disconnecting, failing, or exceeding the one-second probe timeout. It does not create a new database connection. Docker's backend health check uses this endpoint.
+
+`GET /api/health/live` returns HTTP 200 when the HTTP process responds, independently of database availability. Both endpoints are public, return JSON with `status`, `service`, an ISO timestamp, and `uptimeSeconds`, and set `Cache-Control: no-store`. Readiness additionally returns `checks.mongodb.status` as `up` or `down`, without exposing database configuration or error details.
+
+Through Docker Compose, open `http://localhost:8080/api/health` or use your server's LAN address. `/healthz` on the frontend only checks Nginx. The backend begins listening after its initial MongoDB connection succeeds, so probes cannot reach it during that initial connection attempt.
+
 ## Logging and errors
 
 The client sends `traceparent`, `X-Trace-Id`, `X-Span-Id`, and `X-Client-Id` headers. Request middleware attaches context to a child Pino logger and returns tracing headers for correlation. Request completion logs include method, path, status, duration, and the authenticated user ID when available.
@@ -280,6 +335,19 @@ Controllers emit events for operations such as billing, restocks, and admin upda
 
 ## Checks and current limitations
 
+Backend tests use Node's built-in test runner. Use Node.js 22.8 or newer; no additional test dependencies are required.
+
+From the repository root:
+
+```sh
+npm test
+npm run test:coverage
+```
+
+The coverage command enforces 100% lines, branches, and functions across the backend application, startup, routes, controllers, middleware, services, models, and logger. It exits unsuccessfully if a threshold is missed. A configured threshold is not a measured coverage result: these tests have been source-reviewed but have not been executed in this session under the read/write-only restriction.
+
+API tests send HTTP requests through real Express routes and middleware on temporary loopback ports. Database calls use isolated mocks; schema tests exercise real Mongoose validation and password hooks with driver writes stubbed. Tests do not load `.env` or connect to the application database. MongoDB aggregation execution, index enforcement, and concurrent writes still need separate database integration tests. See [`tests/README.md`](tests/README.md) for the API test map and scope.
+
 The client exposes the standard React Scripts commands:
 
 ```sh
@@ -287,8 +355,6 @@ cd client
 npm run build
 npm test
 ```
-
-The root `npm test` is a placeholder that exits with an error; there is no configured backend test suite. The new functionality has been reviewed through source inspection and has not been runtime-verified in this session.
 
 Billing currently compensates failed operations by restoring deducted stock rather than using a multi-document transaction. Product analytics aggregates sales in MongoDB, then merges catalog metadata, sorts, and paginates in server memory. Larger deployments may need transaction-backed billing and database-side product pagination.
 
