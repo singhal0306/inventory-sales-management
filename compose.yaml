@@ -1,0 +1,49 @@
+name: stockroom
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    environment:
+      # Keep the internal API port aligned with the frontend proxy.
+      port: "5000"
+    init: true
+    restart: unless-stopped
+    networks:
+      - stockroom
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - >-
+          fetch('http://127.0.0.1:' + (process.env.port || 5000) + '/api/health',
+          { signal: AbortSignal.timeout(2000) })
+          .then(response => process.exit(response.ok ? 0 : 1))
+          .catch(() => process.exit(1))
+      interval: 30s
+      timeout: 5s
+      retries: 2
+      start_period: 20s
+
+  frontend:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    environment:
+      BACKEND_URL: http://backend:5000
+    ports:
+      - "8080:8080"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - stockroom
+
+networks:
+  stockroom:
+    driver: bridge
