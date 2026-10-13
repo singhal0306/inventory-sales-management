@@ -27,6 +27,9 @@ const protect = async (req, res, next) => {
     };
     next();
   } catch (error) {
+    if (["JsonWebTokenError", "TokenExpiredError", "NotBeforeError"].includes(error.name)) {
+      error.statusCode = 401;
+    }
     next(error);
   }
 };

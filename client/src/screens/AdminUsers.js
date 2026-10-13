@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { Navigate } from "react-router-dom";
 import { fetchAdminUsers, updateAdminUser } from "../store/adminAction";
 import { adminActions } from "../store/adminSlice";
+import AdminUserAvatar from "../components/AdminUserAvatar";
 
 const inputStyle = "w-full rounded-md border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm outline-none focus:border-emerald-600 focus:bg-white focus:ring-2 focus:ring-emerald-100";
 
@@ -55,7 +56,7 @@ export default function AdminUsers() {
                   </tr></thead>
                   <tbody className="divide-y divide-slate-100">{visibleUsers.map((user) => (
                     <tr key={user._id} className="hover:bg-emerald-50/30">
-                      <td className="px-5 py-4"><p className="font-medium text-slate-800">{user.name}{user._id === currentUser._id ? " (you)" : ""}</p><p className="text-xs text-slate-500">{user.email}</p></td>
+                      <td className="px-5 py-4"><div className="flex items-center gap-3"><AdminUserAvatar user={user} /><div className="min-w-0"><p className="font-medium text-slate-800">{user.name}{user._id === currentUser._id ? " (you)" : ""}</p><p className="text-xs text-slate-500">{user.email}</p></div></div></td>
                       <td className="px-5 py-4 capitalize text-slate-700">{user.role}</td>
                       <td className="px-5 py-4"><span className={`rounded-full px-2.5 py-1 text-xs font-medium ${user.isActive === false ? "bg-slate-100 text-slate-600" : "bg-emerald-50 text-emerald-800"}`}>{user.isActive === false ? "Disabled" : "Active"}</span></td>
                       <td className="px-5 py-4 text-right"><button type="button" disabled={saving} onClick={() => { setEditing({ ...user }); dispatch(adminActions.clearFeedback()); }} aria-label={`Edit ${user.name}`} className="rounded px-2 py-1 font-medium text-emerald-700 hover:bg-emerald-50 disabled:opacity-50">Edit</button></td>
