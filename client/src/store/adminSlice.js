@@ -1,6 +1,6 @@
 import { createSlice } from "@reduxjs/toolkit";
 
-const initialState = { users: [], loading: false, saving: false, loaded: false, error: null, message: null };
+const initialState = { users: [], photos: {}, loading: false, saving: false, loaded: false, error: null, message: null };
 
 const adminSlice = createSlice({
   name: "admin",
@@ -12,6 +12,7 @@ const adminSlice = createSlice({
     },
     fetchUsersSuccess(state, action) {
       state.users = action.payload;
+      state.photos = {};
       state.loading = false;
       state.loaded = true;
     },
@@ -19,6 +20,20 @@ const adminSlice = createSlice({
       state.loading = false;
       state.loaded = false;
       state.error = action.payload;
+    },
+    photoRequest(state, action) {
+      const { id, requestId } = action.payload;
+      state.photos[id] = { requestId, status: "loading", url: null };
+    },
+    photoSuccess(state, action) {
+      const { id, requestId, url } = action.payload;
+      if (state.photos[id]?.requestId !== requestId) return;
+      state.photos[id] = { requestId, status: "loaded", url };
+    },
+    photoFail(state, action) {
+      const { id, requestId } = action.payload;
+      if (state.photos[id]?.requestId !== requestId) return;
+      state.photos[id] = { requestId, status: "failed", url: null };
     },
     updateUserRequest(state) {
       state.saving = true;

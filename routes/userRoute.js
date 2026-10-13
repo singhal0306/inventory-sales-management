@@ -16,6 +16,7 @@ const router = express.Router();
 
 router.post("/register", registerUser);
 router.get("/admin/users", protect, requireAdmin, getUsers);
+router.get("/admin/users/:id/profile-photo", protect, requireAdmin, getProfilePhoto);
 router.patch("/admin/users/:id", protect, requireAdmin, updateUser);
 router.post("/login", loginUser);
 router.post("/logout", protect, logoutUser);

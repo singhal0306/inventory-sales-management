@@ -1,6 +1,7 @@
 const User = require("../modals/userModal");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
+const mongoose = require("mongoose");
 
 const jwtCookieOptions = () => {
   const sameSite = (process.env.cookieSameSite || "lax").toLowerCase();
@@ -22,11 +23,16 @@ const genToken = (id) => {
 const registerUser = async (req, res, next) => {
   try {
     const { firstName, lastName, email, password } = req.body;
-    const name = firstName.toUpperCase() + " " + lastName.toUpperCase();
-    if (!name || !email || !password) {
+    if (
+      typeof firstName !== "string" || !firstName.trim() ||
+      typeof lastName !== "string" || !lastName.trim() ||
+      typeof email !== "string" || !email.trim() ||
+      typeof password !== "string" || !password
+    ) {
       res.status(400);
       throw new Error("Please provide all the information!");
     }
+    const name = `${firstName.trim().toUpperCase()} ${lastName.trim().toUpperCase()}`;
     if (password.length < 6) {
       res.status(400);
       throw new Error("Minimum password length is 6");
@@ -156,7 +162,9 @@ const getUser = async (req, res, next) => {
 };
 
 const logoutUser = (req, res, next) => {
-  res.clearCookie("jwt", jwtCookieOptions());
+  const options = jwtCookieOptions();
+  delete options.maxAge;
+  res.clearCookie("jwt", options);
   req.log?.info({ event: "auth.logout" }, "User logged out");
   res.status(200).json({ message: "User Logged Out Successfully" });
 };
@@ -186,7 +194,12 @@ const detectProfilePhotoType = (buffer) => {
 
 const getProfilePhoto = async (req, res, next) => {
   try {
-    const user = await User.findById(req.user._id).select("profilePhoto");
+    // Only the requireAdmin-protected photo route defines a target user ID.
+    if (req.params.id && !mongoose.Types.ObjectId.isValid(req.params.id)) {
+      res.status(400);
+      throw new Error("Invalid user ID.");
+    }
+    const user = await User.findById(req.params.id || req.user._id).select("profilePhoto");
     const photo = user?.profilePhoto;
     if (!photo?.data || !photo.contentType) {
       res.status(404);
