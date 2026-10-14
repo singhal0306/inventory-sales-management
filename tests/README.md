@@ -1,6 +1,14 @@
 # Backend tests
 
-Requires Node.js 22.8 or newer and the existing backend dependencies. The suite uses `node:test`, `node:assert/strict`, and `node:http`; it adds no test packages or lockfile changes. Node documents the coverage threshold options in its [CLI reference](https://nodejs.org/download/release/v22.17.0/docs/api/cli.html).
+Requires Node.js 22.8 or newer. The suite uses `node:test`, `node:assert/strict`, and `node:http`. Reporting uses the development dependencies [`c8`](https://github.com/bcoe/c8) and [`node-reporter-sonarqube`](https://github.com/sjinks/node-reporter-sonarqube), configured directly in `package.json`.
+
+Before the first run, install the new development dependencies and update the lockfile:
+
+```sh
+npm install --include=dev
+```
+
+Commit the resulting `package-lock.json` update before using `npm ci` in CI or Docker builds. The dependency install has not been run in this session.
 
 Run from the repository root:
 
@@ -9,7 +17,18 @@ npm test
 npm run test:coverage
 ```
 
-`npm test` runs the behavioral assertions. `npm run test:coverage` also requires 100% lines, branches, and functions for backend source files. Its report identifies uncovered lines and exits with failure for missed thresholds. The coverage command includes `app.js`, `server.js`, and all JavaScript under `routes`, `controllers`, `middleware`, `services`, `modals`, and `utils`; frontend, test helpers, and third-party dependencies are outside backend coverage scope. There are no source coverage-ignore directives.
+Both commands run the behavioral assertions, show test results and a coverage summary in the terminal, and write these files:
+
+| Generated file | Purpose | SonarQube parameter |
+| --- | --- | --- |
+| `coverage/lcov.info` | Backend line, branch, and function coverage | `sonar.javascript.lcov.reportPaths` |
+| `test-report.xml` | Test names, durations, passes, failures, and skips in Sonar's generic format | `sonar.testExecutionReportPaths` |
+
+`npm run test` and `npm test` are equivalent. `npm run test:coverage` runs the same tests and then uses `c8 check-coverage` to require 100% lines, branches, and functions for backend source files, exiting with failure for missed thresholds. The `c8` coverage scope includes `app.js`, `server.js`, and all JavaScript under `routes`, `controllers`, `middleware`, `services`, `modals`, and `utils`; frontend, scripts, test helpers, and third-party dependencies are outside backend coverage scope. `all: true` includes backend source files that tests never load as uncovered. There are no source coverage-ignore directives.
+
+The `test` command runs `tests/*.test.js` sequentially with Node's built-in test runner. `c8` creates the coverage directory and writes LCOV; `node-reporter-sonarqube` writes generic execution XML directly to the repository root. Test failures retain a nonzero exit code while completed runs still produce reports. Generated reports and scanner working files are ignored by Git. No custom runner, reporter, or TypeScript loader is used.
+
+The root `sonar-project.properties` points the scanner to these files and limits analysis to the backend. Run the scanner from the repository root after tests; see [`scripts/SONARQUBE.md`](../scripts/SONARQUBE.md) for project identity, environment variables, and CI setup.
 
 **Verification status:** these files were written and reviewed without running commands other than file reads, as requested. No passing test result or measured coverage percentage is claimed. The strict command may fail until its first run identifies any remaining test failures or coverage gaps.
 
