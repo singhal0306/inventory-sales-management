@@ -344,7 +344,9 @@ npm test
 npm run test:coverage
 ```
 
-The coverage command enforces 100% lines, branches, and functions across the backend application, startup, routes, controllers, middleware, services, models, and logger. It exits unsuccessfully if a threshold is missed. A configured threshold is not a measured coverage result: these tests have been source-reviewed but have not been executed in this session under the read/write-only restriction.
+Both commands use `c8` and `node-reporter-sonarqube`, configured directly in `package.json`, to generate `coverage/lcov.info` for backend coverage and `test-report.xml` for SonarQube test outcomes while displaying results in the terminal. Install the new development dependencies and synchronize `package-lock.json` with `npm install --include=dev` before the first run; commit the updated lockfile before using `npm ci` in CI or Docker builds. The root `sonar-project.properties` configures backend source/test paths and both report imports. Run your scanner from the repository root after tests with `SONAR_HOST_URL` and `SONAR_TOKEN` configured; see [`scripts/SONARQUBE.md`](scripts/SONARQUBE.md) for setup.
+
+The `test:coverage` command additionally enforces 100% lines, branches, and functions across the backend application, startup, routes, controllers, middleware, services, models, and logger. It exits unsuccessfully if a threshold is missed. A configured threshold is not a measured coverage result: these tests have been source-reviewed but have not been executed in this session under the read/write-only restriction.
 
 API tests send HTTP requests through real Express routes and middleware on temporary loopback ports. Database calls use isolated mocks; schema tests exercise real Mongoose validation and password hooks with driver writes stubbed. Tests do not load `.env` or connect to the application database. MongoDB aggregation execution, index enforcement, and concurrent writes still need separate database integration tests. See [`tests/README.md`](tests/README.md) for the API test map and scope.
 
